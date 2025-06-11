@@ -1,0 +1,84 @@
+{
+  "campos": {
+    "tara_por_fardo": 2.0,
+    "precision_decimal": 2,
+    "numero_fardo_inicial": 1
+  },
+  "balanza": {
+    "simular_balanza": false,
+    "puerto_serie": "COM1",
+    "baudrate": 9600,
+    "timeout": 1,
+    "protocolo": "CONTINUO",
+    "peso_min_simulado": 15.0,
+    "peso_max_simulado": 45.0,
+    "activar_dtr": true,
+    "activar_rts": true
+  },
+  "visual": {
+    "colores": {
+      "primario": "#2E86AB",
+      "secundario": "#A23B72",
+      "acento": "#F18F01",
+      "exito": "#C73E1D",
+      "fondo_principal": "#F8F9FA",
+      "fondo_panel": "#FFFFFF",
+      "fondo_entrada": "#FFFFFF",
+      "fondo_hover": "#E3F2FD",
+      "fondo_seleccion": "#BBDEFB",
+      "texto_principal": "#212529",
+      "texto_secundario": "#6C757D",
+      "texto_blanco": "#FFFFFF",
+      "texto_exito": "#155724",
+      "texto_error": "#721C24",
+      "borde_principal": "#DEE2E6",
+      "borde_activo": "#2E86AB",
+      "sombra": "#DDDDDD",
+      "activo": "#28A745",
+      "inactivo": "#6C757D",
+      "peligro": "#DC3545",
+      "advertencia": "#FFC107"
+    },
+    "fuentes": {
+      "titulo": ["Segoe UI", 16, "bold"],
+      "subtitulo": ["Segoe UI", 12, "bold"],
+      "normal": ["Segoe UI", 10],
+      "pequena": ["Segoe UI", 9],
+      "monospace": ["Consolas", 10],
+      "grande": ["Segoe UI", 14],
+      "extra_grande": ["Segoe UI", 18, "bold"]
+    },
+    "dimensiones": {
+      "ventana_ancho": 1200,
+      "ventana_alto": 700,
+      "panel_fardos_ancho": 500,
+      "panel_stats_ancho": 350,
+      "altura_fila_tabla": 20,
+      "padding_general": 15,
+      "padding_pequeno": 8,
+      "radio_borde": 8
+    }
+  },
+  "exportacion": {
+    "carpeta_destino": "exportaciones",
+    "formato_fecha": "%Y%m%d_%H%M%S",
+    "separador_csv": ";",
+    "encoding": "utf-8-sig"
+  },
+  "mensajes": {
+    "ticket_creado": "Ticket creado exitosamente",
+    "fardo_agregado": "Fardo agregado correctamente",
+    "exportacion_exitosa": "Archivo exportado correctamente",
+    "error_conexion_balanza": "Error al conectar con la balanza",
+    "error_exportacion": "Error al exportar archivo",
+    "confirmacion_eliminar": "¿Está seguro de eliminar este fardo?",
+    "sin_datos": "No hay datos para exportar"
+  },
+  "validaciones": {
+    "ticket_min_length": 1,
+    "ticket_max_length": 20,
+    "peso_minimo": 0.1,
+    "peso_maximo": 1000000.0,
+    "numero_fardo_maximo": 10000000
+  }
+}
