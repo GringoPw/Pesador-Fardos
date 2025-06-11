@@ -1,5 +1,6 @@
-# leer_balanza.py
+# leer_balanza_cambios.py
 import serial
+import re
 
 ser = serial.Serial(
     port='COM1',
@@ -18,8 +19,21 @@ ser.setDTR(True)
 ser.setRTS(True)
 
 print("Esperando datos de la balanza en COM1...")
+print("Solo se mostrarán los cambios de peso...\n")
 
 buffer = ""
+peso_anterior = None
+
+def extraer_peso(texto):
+    """Extrae el valor numérico del peso del texto recibido"""
+    # Buscar números con posibles decimales
+    match = re.search(r'[-+]?\d*\.?\d+', texto)
+    if match:
+        try:
+            return float(match.group())
+        except ValueError:
+            return None
+    return None
 
 try:
     while True:
@@ -27,12 +41,18 @@ try:
             byte = ser.read().decode('ascii', errors='ignore')
             if byte in ['\r', '\n']:  # Detectar fin de línea
                 if buffer.strip():
-                    print("Peso recibido:", buffer.strip())
+                    peso_actual = extraer_peso(buffer.strip())
+                    
+                    # Solo mostrar si el peso cambió
+                    if peso_actual is not None and peso_actual != peso_anterior:
+                        print(f"Peso: {peso_actual} kg")
+                        peso_anterior = peso_actual
+                        
                 buffer = ""
             else:
                 buffer += byte
 
 except KeyboardInterrupt:
-    print("Finalizado por el usuario.")
+    print("\nFinalizado por el usuario.")
 finally:
     ser.close()

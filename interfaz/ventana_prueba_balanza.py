@@ -16,6 +16,7 @@ class VentanaPruebaBalanza:
         self.ventana = None
         self.monitoreo_activo = False
         self.thread_monitoreo = None
+        self.ventana_cerrada = False  # Flag para evitar errores
         
         self.crear_ventana()
     
@@ -229,7 +230,7 @@ class VentanaPruebaBalanza:
         """Crea el panel de datos recibidos"""
         # Frame con borde
         datos_frame = tk.LabelFrame(parent, 
-                                  text="📡 Datos Recibidos",
+                                  text="📡 Datos Recibidos (Tiempo Real)",
                                   font=FUENTES['subtitulo'],
                                   bg=COLORES['fondo_panel'],
                                   fg=COLORES['texto_principal'])
@@ -363,77 +364,106 @@ class VentanaPruebaBalanza:
     
     def monitorear_balanza(self):
         """Monitorea la balanza en un hilo separado"""
-        while self.monitoreo_activo:
+        while self.monitoreo_activo and not self.ventana_cerrada:
             try:
-                # Obtener peso
+                # Obtener peso FRESCO
                 peso = self.balanza.obtener_peso()
                 
-                # Actualizar interfaz
-                self.ventana.after(0, self.actualizar_peso, peso)
-                
-                # Actualizar estado de conexión
-                self.ventana.after(0, self.actualizar_estado_conexion)
-                
-                # Actualizar datos recibidos
-                datos = self.balanza.obtener_datos_recibidos()
-                if datos:
-                    self.ventana.after(0, self.actualizar_datos_recibidos, datos)
+                # Actualizar interfaz solo si la ventana no está cerrada
+                if not self.ventana_cerrada:
+                    self.ventana.after(0, self.actualizar_peso, peso)
+                    self.ventana.after(0, self.actualizar_estado_conexion)
+                    
+                    # Actualizar datos recibidos
+                    datos = self.balanza.obtener_datos_recibidos()
+                    if datos:
+                        self.ventana.after(0, self.actualizar_datos_recibidos, datos)
                 
             except Exception as e:
                 print(f"Error en monitoreo: {e}")
+                break
             
-            # Esperar un poco
-            time.sleep(0.5)
+            # Esperar menos tiempo para más responsividad
+            time.sleep(0.3)
     
     def actualizar_peso(self, peso):
         """Actualiza el peso mostrado"""
-        self.lbl_peso.config(text=f"{peso:.2f} kg")
+        if not self.ventana_cerrada:
+            try:
+                self.lbl_peso.config(text=f"{peso:.2f} kg")
+            except:
+                pass
     
     def actualizar_estado_conexion(self):
         """Actualiza el estado de la conexión"""
-        estado = self.balanza.obtener_estado()
-        
-        if estado['conectada']:
-            self.lbl_estado.config(text=f"🟢 Conectado - {estado['puerto']} @ {estado['baudrate']} bps",
-                                 fg=COLORES['activo'])
-        else:
-            self.lbl_estado.config(text="🔴 Desconectado", fg=COLORES['peligro'])
-        
-        # Actualizar error
-        if estado['ultimo_error']:
-            self.lbl_ultimo_error.config(text=f"Error: {estado['ultimo_error']}")
-        else:
-            self.lbl_ultimo_error.config(text="")
+        if self.ventana_cerrada:
+            return
+            
+        try:
+            estado = self.balanza.obtener_estado()
+            
+            if estado['conectada']:
+                self.lbl_estado.config(text=f"🟢 Conectado - {estado['puerto']} @ {estado['baudrate']} bps",
+                                     fg=COLORES['activo'])
+            else:
+                self.lbl_estado.config(text="🔴 Desconectado", fg=COLORES['peligro'])
+            
+            # Actualizar error
+            if estado['ultimo_error']:
+                self.lbl_ultimo_error.config(text=f"Error: {estado['ultimo_error']}")
+            else:
+                self.lbl_ultimo_error.config(text="")
+        except:
+            # Si hay error, la ventana probablemente está cerrada
+            pass
     
     def actualizar_datos_recibidos(self, datos):
         """Actualiza los datos recibidos en el texto"""
-        # Habilitar edición
-        self.txt_datos.config(state='normal')
-        
-        # Agregar solo los últimos datos (no limpiar todo)
-        for dato in datos[-10:]:  # Solo últimos 10 datos
-            timestamp = time.strftime("%H:%M:%S")
-            self.txt_datos.insert(tk.END, f"[{timestamp}] {dato}\n")
-        
-        # Scroll al final
-        self.txt_datos.see(tk.END)
-        
-        # Deshabilitar edición
-        self.txt_datos.config(state='disabled')
+        if self.ventana_cerrada:
+            return
+            
+        try:
+            # Habilitar edición
+            self.txt_datos.config(state='normal')
+            
+            # Limpiar y agregar todos los datos
+            self.txt_datos.delete(1.0, tk.END)
+            for dato in datos[-20:]:  # Solo últimos 20 datos
+                timestamp = time.strftime("%H:%M:%S")
+                self.txt_datos.insert(tk.END, f"[{timestamp}] {dato}\n")
+            
+            # Scroll al final
+            self.txt_datos.see(tk.END)
+            
+            # Deshabilitar edición
+            self.txt_datos.config(state='disabled')
+        except:
+            # Si hay error, la ventana probablemente está cerrada
+            pass
     
     def limpiar_datos(self):
         """Limpia los datos recibidos"""
-        self.balanza.limpiar_datos_recibidos()
-        self.txt_datos.config(state='normal')
-        self.txt_datos.delete(1.0, tk.END)
-        self.txt_datos.config(state='disabled')
+        if not self.ventana_cerrada:
+            self.balanza.limpiar_datos_recibidos()
+            try:
+                self.txt_datos.config(state='normal')
+                self.txt_datos.delete(1.0, tk.END)
+                self.txt_datos.config(state='disabled')
+            except:
+                pass
     
     def cerrar_ventana(self):
         """Cierra la ventana"""
+        # Marcar como cerrada para evitar errores
+        self.ventana_cerrada = True
+        
         # Detener monitoreo
         self.monitoreo_activo = False
         if self.thread_monitoreo:
             self.thread_monitoreo.join(timeout=1.0)
         
         # Cerrar ventana
-        self.ventana.destroy()
+        try:
+            self.ventana.destroy()
+        except:
+            pass
